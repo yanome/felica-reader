@@ -175,6 +175,12 @@ func (s *text) Clean(g *gocui.Gui) error {
 		return err
 	}
 	view.Clear()
+	if err = view.SetCursor(0, 0); err != nil {
+		return fmt.Errorf("error updating cursor: %s", err)
+	}
+	if err = view.SetOrigin(0, 0); err != nil {
+		return fmt.Errorf("error updating origin: %s", err)
+	}
 	return nil
 }
 

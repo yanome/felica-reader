@@ -53,11 +53,7 @@ func (s service) isReadable() bool {
 }
 
 func (s service) String() string {
-	label, found := serviceTypes[s.Id&SERVICE_TYPE]
-	if !found {
-		label = "Unknown"
-	}
-	return fmt.Sprintf("%04x %s", s.Id, label)
+	return fmt.Sprintf("%04x %s", s.Id, serviceTypes[s.Id&SERVICE_TYPE])
 }
 
 type system struct {
@@ -66,10 +62,22 @@ type system struct {
 }
 
 func (s system) DecodedService(i int) string {
-	service := s.Services[i]
 	b := strings.Builder{}
-	b.WriteString(fmt.Sprintf("System: %s\n", s))
-	b.WriteString(fmt.Sprintf("Service: %s", service))
+	b.WriteString(fmt.Sprintf("System code: %s", s))
+	service := s.Services[i]
+	serviceNumber := service.Id
+	for mask := SERVICE_TYPE; mask > 0; mask >>= 1 {
+		serviceNumber >>= 1
+	}
+	serviceAttribute := service.Id & SERVICE_TYPE
+	b.WriteString(fmt.Sprintf("\nService code: %04x, number: %03x, attribute: %02x %s", service.Id, serviceNumber, serviceAttribute, serviceTypes[serviceAttribute]))
+	if decoder, found := decoders[decoderKey{
+		systemId:  s.Id,
+		serviceId: service.Id,
+		blocks:    len(service.Blocks),
+	}]; found {
+		decoder(service.Blocks, &b)
+	}
 	return b.String()
 }
 
